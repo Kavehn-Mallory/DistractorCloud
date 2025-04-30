@@ -1,0 +1,27 @@
+{
+  "name": "com.kavehnmallory.distractorclouds",
+  "version": "1.0.0",
+  "displayName": "Distractor Clouds",
+  "description": "This package contains the MagicLeap 2 Distractor Clouds Task",
+  "unity": "6000.0",
+  "unityRelease": "25f1",
+  "documentationUrl": "",
+  "changelogUrl": "",
+  "licensesUrl": "",
+  "dependencies": {
+    "com.unity.burst": "1.8.18",
+    "com.unity.collections": "2.5.1",
+    "com.unity.inputsystem": "1.11.2",
+    "com.unity.render-pipelines.universal": "17.0.3",
+    "com.unity.splines": "2.6.1",
+    "com.unity.mathematics": "1.3.2",
+    "com.magicleap.unitysdk": "2.6.0"
+  },
+  "keywords": [
+  ],
+  "author": {
+    "name": "Jan Wittke",
+    "email": "Jan.Wittke@h-brs.de",
+    "url": ""
+  }
+}
