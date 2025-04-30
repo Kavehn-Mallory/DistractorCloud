@@ -12,7 +12,7 @@ namespace DistractorClouds.DistractorTask
 {
     public class DistractorTaskManager : MonoBehaviour
     {
-        [Header("Distractor Task Settings")]
+        [Header("Distractor Task Settings")][Space(5f)]
         public Camera targetCamera;
 
         public ClosestSplinePointGeneration pointGenerator;
@@ -20,7 +20,7 @@ namespace DistractorClouds.DistractorTask
         public Material defaultMaterial;
         public Material targetMaterial;
 
-        [Header("Search Area Settings")]
+        [Header("Search Area Settings")][Space(5f)]
         public float2 searchAreaInPixel;
         public Image searchArea;
         public SearchAreaComparison searchAreaComparison;
@@ -28,10 +28,12 @@ namespace DistractorClouds.DistractorTask
         [Tooltip("Used for overlap comparison. How much overlap is necessary for the selection to be valid")]
         public float overlapPercent = 0.5f;
         
+        
         #region EventHooks
 
-        [Header("Event Hooks")]
+        
         public Action<StudyStartData> OnStudyStartEvent = delegate {};
+        [Header("Event Hooks")][Space(5f)]
         [SerializeField]
         private UnityEvent<StudyStartData> onStudyStartEvent = new();
         
