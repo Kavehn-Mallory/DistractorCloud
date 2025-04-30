@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetCamera: {fileID: 0}
-  pointGenerator: {fileID: 0}
+  pointGenerator: {fileID: 2154905002656057255}
   defaultMaterial: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
   targetMaterial: {fileID: 2100000, guid: 156ed64d10d2a514e89f2f50e094b9dd, type: 2}
   searchAreaInPixel:
@@ -112,7 +112,6 @@ GameObject:
   - component: {fileID: 7876725991628837487}
   - component: {fileID: 1982971435257730519}
   - component: {fileID: 977418697501317655}
-  - component: {fileID: 5272613788327134353}
   m_Layer: 0
   m_Name: PathRight
   m_TagString: Untagged
@@ -190,34 +189,6 @@ MonoBehaviour:
   tension: 0.4
   distanceFromPath: 0
   textAsset: {fileID: 4900000, guid: 3ab7969624b977c44b2b7f24692f727c, type: 3}
---- !u!114 &5272613788327134353
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4108637488711567621}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7230206bbe86454098fb1511316bb763, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  samplePointAsset: {fileID: 11400000, guid: 027e39b06e1a6dc418a4671848db388d, type: 2}
-  splineContainer: []
-  distractorLayer: 3
-  density: {x: 30, y: 40}
-  spacing: {x: 6, y: 4}
-  seed: 0
-  createDistractorsOnStart: 0
-  itemsToInstantiate:
-  - prefab: {fileID: 0}
-    Prefab: {fileID: 5831918106986619555, guid: f79ab4c7f8dfd864d847d9eabd9af292, type: 3}
-    probability: 0
-    Probability: 20
-  - prefab: {fileID: 0}
-    Prefab: {fileID: 2773273347215805051, guid: 07ae4d04d8b0a8148a87a7b9c8217c21, type: 3}
-    probability: 0
-    Probability: 80
 --- !u!1 &4814256127827536930
 GameObject:
   m_ObjectHideFlags: 0
@@ -229,7 +200,6 @@ GameObject:
   - component: {fileID: 84573020438459996}
   - component: {fileID: 8629863471669679292}
   - component: {fileID: 2487908749200303049}
-  - component: {fileID: 107148340890207806}
   m_Layer: 0
   m_Name: Path_Left
   m_TagString: Untagged
@@ -307,34 +277,6 @@ MonoBehaviour:
   tension: 0.4
   distanceFromPath: 0
   textAsset: {fileID: 4900000, guid: 3ab7969624b977c44b2b7f24692f727c, type: 3}
---- !u!114 &107148340890207806
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4814256127827536930}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7230206bbe86454098fb1511316bb763, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  samplePointAsset: {fileID: 11400000, guid: 027e39b06e1a6dc418a4671848db388d, type: 2}
-  splineContainer: []
-  distractorLayer: 3
-  density: {x: 30, y: 40}
-  spacing: {x: 6, y: 4}
-  seed: 0
-  createDistractorsOnStart: 0
-  itemsToInstantiate:
-  - prefab: {fileID: 0}
-    Prefab: {fileID: 5831918106986619555, guid: f79ab4c7f8dfd864d847d9eabd9af292, type: 3}
-    probability: 0
-    Probability: 20
-  - prefab: {fileID: 0}
-    Prefab: {fileID: 2773273347215805051, guid: 07ae4d04d8b0a8148a87a7b9c8217c21, type: 3}
-    probability: 0
-    Probability: 80
 --- !u!1 &6138889659685525954
 GameObject:
   m_ObjectHideFlags: 0
