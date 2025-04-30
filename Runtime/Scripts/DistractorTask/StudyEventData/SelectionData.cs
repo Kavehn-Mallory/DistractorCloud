@@ -6,7 +6,7 @@ namespace DistractorClouds.DistractorTask.StudyEventData
     [Serializable]
     public struct SelectionData : IStudyEventData
     {
-        public float TimeStamp { get; set; }
+        public string TimeStamp { get; set; }
         public bool IsValidSelection { get; set; }
     }
 }

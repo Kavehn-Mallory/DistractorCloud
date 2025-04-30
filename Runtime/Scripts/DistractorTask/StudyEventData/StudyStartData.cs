@@ -6,6 +6,6 @@ namespace DistractorClouds.DistractorTask.StudyEventData
     [Serializable]
     public struct StudyStartData : IStudyEventData
     {
-        public float TimeStamp { get; set; }
+        public string TimeStamp { get; set; }
     }
 }

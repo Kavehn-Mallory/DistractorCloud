@@ -1,9 +1,10 @@
-﻿using DistractorClouds.Core;
+﻿using System;
+using DistractorClouds.Core;
 
 namespace DistractorClouds.DistractorTask.StudyEventData
 {
     public struct StudyEndData : IStudyEventData
     {
-        public float TimeStamp { get; set; }
+        public string TimeStamp { get; set; }
     }
 }

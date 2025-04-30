@@ -1,11 +1,12 @@
-﻿using DistractorClouds.Core;
+﻿using System;
+using DistractorClouds.Core;
 using UnityEngine;
 
 namespace DistractorClouds.DistractorTask.StudyEventData
 {
     public struct SplineRepositioningData : IStudyEventData
     {
-        public float TimeStamp { get; set; }
+        public string TimeStamp { get; set; }
         
         public Quaternion OldOrientation { get; set; }
         public Quaternion NewOrientation { get; set; }

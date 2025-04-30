@@ -1,7 +1,9 @@
-﻿namespace DistractorClouds.Core
+﻿using System;
+
+namespace DistractorClouds.Core
 {
     public interface IStudyEventData
     {
-        public float TimeStamp { get; set; }
+        public string TimeStamp { get; set; }
     }
 }

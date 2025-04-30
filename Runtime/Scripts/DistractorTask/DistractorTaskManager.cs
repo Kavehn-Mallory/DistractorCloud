@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using DistractorClouds.DistractorTask.StudyEventData;
 using DistractorClouds.PanelGeneration;
 using Unity.Mathematics;
@@ -72,15 +73,17 @@ namespace DistractorClouds.DistractorTask
         private List<ClosestSplinePointGeneration.InstantiatedPointCloudObject> _instantiatedPointCloudObjects = new();
         private float _maxLength;
 
+
+        private static string CurrentTime => DateTime.Now.ToString("HH-mm-ss-ffff", CultureInfo.InvariantCulture);
+
         #endregion
 
-
-
+        
         private void OnStudyStart()
         {
             var studyStartData = new StudyStartData
             {
-                TimeStamp = Time.time
+                TimeStamp = CurrentTime
             };
             OnStudyStartEvent.Invoke(studyStartData);
             onStudyStartEvent.Invoke(studyStartData);
@@ -90,7 +93,7 @@ namespace DistractorClouds.DistractorTask
         {
             var selectionPressedData = new SelectionData
             {
-                TimeStamp = Time.time,
+                TimeStamp = CurrentTime,
                 IsValidSelection = validSelection
             };
             
@@ -102,7 +105,7 @@ namespace DistractorClouds.DistractorTask
         {
             var studyEndData = new StudyEndData()
             {
-                TimeStamp = Time.time
+                TimeStamp = CurrentTime
             };
             
             OnStudyEndEvent.Invoke(studyEndData);
@@ -113,7 +116,7 @@ namespace DistractorClouds.DistractorTask
         {
             var studyPathEndPointReachedData = new StudyPathEndPointReachedData()
             {
-                TimeStamp = Time.time,
+                TimeStamp = CurrentTime,
                 SplinePosition = splinePosition
             };
             
@@ -126,7 +129,7 @@ namespace DistractorClouds.DistractorTask
         {
             var repositioningData = new SplineRepositioningData
             {
-                TimeStamp = Time.time,
+                TimeStamp = CurrentTime,
                 OldOrientation = oldOrientation,
                 NewOrientation = newOrientation,
                 NewPosition = newPosition,
@@ -225,14 +228,22 @@ namespace DistractorClouds.DistractorTask
             };
 
 
+        public void StartDistractorCloudTask()
+        {
+            GeneratePointCloudData();
+            ChooseTargetDistractorInGroup(0);
+            OnStudyStart();
+            Debug.Log($"First object was selected");
+        }
+
+
         private void TrySelectDistractor()
         {
             if (!_targetRenderer)
             {
-                GeneratePointCloudData();
-                ChooseTargetDistractorInGroup(0);
-                OnStudyStart();
-                Debug.Log($"First object was selected");
+#if UNITY_EDITOR
+                StartDistractorCloudTask();
+#endif
                 return;
             }
             if (IsTargetInView(_targetRenderer?.GetComponent<Collider>(), targetCamera, _searchAreaInViewSpace))
