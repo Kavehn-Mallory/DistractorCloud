@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4644420774684815229}
   - component: {fileID: 7266392437298780556}
   - component: {fileID: 2154905002656057255}
+  - component: {fileID: 3625007498204655904}
   m_Layer: 0
   m_Name: DistractorCloudManager
   m_TagString: Untagged
@@ -53,7 +54,6 @@ MonoBehaviour:
   searchAreaInPixel:
     x: 300
     y: 200
-  searchArea: {fileID: 0}
   searchAreaComparison: 0
   overlapPercent: 0.5
   onStudyStartEvent:
@@ -101,6 +101,27 @@ MonoBehaviour:
     Prefab: {fileID: 2773273347215805051, guid: 07ae4d04d8b0a8148a87a7b9c8217c21, type: 3}
     probability: 0
     Probability: 80
+--- !u!114 &3625007498204655904
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2280132201813067669}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18201d06f3d64e2ab067f22ccab5b0a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  searchAreaShape: 1
+  searchAreaValidation: 0
+  searchAreaAspectRatio:
+    x: 300
+    y: 200
+  diagonalViewingAngle: 10
+  canvasDistanceFromCamera: 0.31
+  overlapPercent: 0.5
+  searchAreaConfigurator: {fileID: 0}
 --- !u!1 &4108637488711567621
 GameObject:
   m_ObjectHideFlags: 0

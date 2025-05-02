@@ -59,7 +59,7 @@ namespace DistractorClouds.PanelGeneration
         
         
 
-        public async void CreateDistractors()
+        public void CreateDistractors()
         {
 
             var splineGenerationFromWaypoint = splineContainer

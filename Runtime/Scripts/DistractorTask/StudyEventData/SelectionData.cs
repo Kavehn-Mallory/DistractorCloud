@@ -1,5 +1,6 @@
 ﻿using System;
 using DistractorClouds.Core;
+using UnityEngine;
 
 namespace DistractorClouds.DistractorTask.StudyEventData
 {
@@ -8,5 +9,6 @@ namespace DistractorClouds.DistractorTask.StudyEventData
     {
         public string TimeStamp { get; set; }
         public bool IsValidSelection { get; set; }
+        public Vector3 TargetPosition { get; set; }
     }
 }

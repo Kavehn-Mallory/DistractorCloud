@@ -23,7 +23,6 @@ namespace DistractorClouds.DistractorTask
 
         [Header("Search Area Settings")][Space(5f)]
         public float2 searchAreaInPixel;
-        public Image searchArea;
         public SearchAreaComparison searchAreaComparison;
         [Range(0, 1)]
         [Tooltip("Used for overlap comparison. How much overlap is necessary for the selection to be valid")]
@@ -89,12 +88,13 @@ namespace DistractorClouds.DistractorTask
             onStudyStartEvent.Invoke(studyStartData);
         }
 
-        private void OnSelectionPressed(bool validSelection)
+        private void OnSelectionPressed(bool validSelection, Vector3 targetPosition)
         {
             var selectionPressedData = new SelectionData
             {
                 TimeStamp = CurrentTime,
-                IsValidSelection = validSelection
+                IsValidSelection = validSelection,
+                TargetPosition = targetPosition
             };
             
             OnSelectionPressedEvent.Invoke(selectionPressedData);
@@ -143,7 +143,6 @@ namespace DistractorClouds.DistractorTask
         {
             FindFirstObjectByType<InputHandler>().OnBumperDown += TrySelectDistractor;
             _searchAreaInViewSpace = CalculateSearchArea(targetCamera, searchAreaInPixel);
-            UpdateSearchAreaSize();
         }
 
         private void GeneratePointCloudData()
@@ -160,26 +159,8 @@ namespace DistractorClouds.DistractorTask
         {
             return x.splinePosition.CompareTo(y.splinePosition);
         }
-
-        private void OnValidate()
-        {
-            if (searchArea)
-            {
-                UpdateSearchAreaSize();
-            }
-        }
-
-
-        private void UpdateSearchAreaSize()
-        {
-            if (!searchArea)
-            {
-                return;
-            }
-            var imageTransform = searchArea.GetComponent<RectTransform>();
-
-            imageTransform.sizeDelta = searchAreaInPixel;
-        }
+        
+        
 
         private static float4 CalculateSearchArea(Camera targetCamera, float2 searchAreaInPixel)
         {
@@ -248,13 +229,13 @@ namespace DistractorClouds.DistractorTask
             }
             if (IsTargetInView(_targetRenderer?.GetComponent<Collider>(), targetCamera, _searchAreaInViewSpace))
             {
-                OnSelectionPressed(true);
+                OnSelectionPressed(true, _targetRenderer.transform.position);
                 //ChooseTargetDistractor();
                 ChooseTargetDistractorInGroup(0);
                 Debug.Log($"Object is {Visible}");
                 return;
             }
-            OnSelectionPressed(false);
+            OnSelectionPressed(false, _targetRenderer.transform.position);
             Debug.Log($"Object is {NotVisible}");
             
         }

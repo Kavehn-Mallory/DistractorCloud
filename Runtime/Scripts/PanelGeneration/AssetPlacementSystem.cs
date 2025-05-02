@@ -286,7 +286,7 @@ namespace DistractorClouds.PanelGeneration
         
         private void BlueNoiseGeneration(ref List<float3> samplePoints)
         {
-            GenerateBlueNoise(_poissonSamplePoints, ref samplePoints, samplePointAssetCreationSettings.noiseMapHeight,
+            GenerateBlueNoise(_poissonSamplePoints.AsArray(), ref samplePoints, samplePointAssetCreationSettings.noiseMapHeight,
                 samplePointAssetCreationSettings.noiseMapWidth, 30);
         }
         
