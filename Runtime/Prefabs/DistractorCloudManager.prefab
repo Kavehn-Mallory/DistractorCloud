@@ -119,7 +119,7 @@ MonoBehaviour:
     x: 300
     y: 200
   diagonalViewingAngle: 10
-  canvasDistanceFromCamera: 0.31
+  canvasDistanceFromCamera: 0.38
   overlapPercent: 0.5
   searchAreaConfigurator: {fileID: 0}
 --- !u!1 &4108637488711567621

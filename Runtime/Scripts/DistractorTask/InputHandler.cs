@@ -11,6 +11,16 @@ namespace DistractorClouds.DistractorTask
         
         public Action OnBumperDown = delegate { };
 
+        public Quaternion PointerRotation => rotationInputAction.ReadValue<Quaternion>();
+        public Vector3 PointerPosition => positionInputAction.ReadValue<Vector3>();
+        
+        [SerializeField]
+        private InputAction positionInputAction = 
+            new InputAction(binding:"<MagicLeapController>/pointer/position", expectedControlType: "Vector3");
+
+        [SerializeField]
+        private InputAction rotationInputAction = new InputAction(binding: "<MagicLeapController>/pointer/rotation",
+            expectedControlType: "Quaternion");
 
 #if UNITY_EDITOR
         private Mouse _activeMouse;
@@ -19,15 +29,25 @@ namespace DistractorClouds.DistractorTask
  
         void Start()
         {
+            
+            positionInputAction.Enable();
+
+            rotationInputAction.Enable();
+            
+            
+            
             _mlInputs = new MagicLeapInputs();
             _mlInputs.Enable();
             _controllerActions = new MagicLeapInputs.ControllerActions(_mlInputs);
             _controllerActions.Bumper.performed += HandleOnBumper;
+
             
 #if UNITY_EDITOR
             _activeMouse = Mouse.current;
 #endif
         }
+
+
 
 
 #if UNITY_EDITOR

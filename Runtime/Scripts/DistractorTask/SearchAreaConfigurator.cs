@@ -65,6 +65,12 @@ namespace DistractorClouds.DistractorTask
             
         }
 
+        private void MoveCanvasBasedOnControllerPosition(Vector3 canvasPosition)
+        {
+            //todo 
+            searchAreaCanvas.transform.SetPositionAndRotation(canvasPosition, Quaternion.identity);
+        }
+
         private void SetupRectangularSearchArea(float2 dimensions)
         {
             rectangularSearchArea.rectTransform.sizeDelta = dimensions;
