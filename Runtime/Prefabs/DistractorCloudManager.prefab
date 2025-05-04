@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7266392437298780556}
   - component: {fileID: 2154905002656057255}
   - component: {fileID: 3625007498204655904}
+  - component: {fileID: 7060871814901252656}
   m_Layer: 0
   m_Name: DistractorCloudManager
   m_TagString: Untagged
@@ -122,6 +123,52 @@ MonoBehaviour:
   canvasDistanceFromCamera: 0.38
   overlapPercent: 0.5
   searchAreaConfigurator: {fileID: 0}
+--- !u!114 &7060871814901252656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2280132201813067669}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb88b8e2da784a8ea5a03f65eaa90c88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  positionInputAction:
+    m_Name: Position Input
+    m_Type: 0
+    m_ExpectedControlType: Vector3
+    m_Id: ce01edbd-9c4e-4e8d-bf2f-af84a523f1e3
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 99d8e3e2-8bb4-4f33-ad58-59e88ee135b8
+      m_Path: <MagicLeapController>/pointer/position
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Position Input
+      m_Flags: 0
+    m_Flags: 0
+  rotationInputAction:
+    m_Name: Rotation Input
+    m_Type: 0
+    m_ExpectedControlType: Quaternion
+    m_Id: a8ce99b2-5bc0-4ac1-a67b-b029e7d1a4b8
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 78b5bd06-cf34-4619-af60-4d36ca6f9d53
+      m_Path: <MagicLeapController>/pointer/rotation
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Rotation Input
+      m_Flags: 0
+    m_Flags: 0
 --- !u!1 &4108637488711567621
 GameObject:
   m_ObjectHideFlags: 0

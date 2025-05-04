@@ -6,11 +6,11 @@ using DistractorClouds.PanelGeneration;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 namespace DistractorClouds.DistractorTask
 {
+    [RequireComponent(typeof(SearchAreaHandler))]
     public class DistractorTaskManager : MonoBehaviour
     {
         [Header("Distractor Task Settings")][Space(5f)]
@@ -21,13 +21,9 @@ namespace DistractorClouds.DistractorTask
         public Material defaultMaterial;
         public Material targetMaterial;
 
-        [Header("Search Area Settings")][Space(5f)]
-        public float2 searchAreaInPixel;
-        public SearchAreaComparison searchAreaComparison;
-        [Range(0, 1)]
-        [Tooltip("Used for overlap comparison. How much overlap is necessary for the selection to be valid")]
-        public float overlapPercent = 0.5f;
         
+        private SearchAreaHandler _searchAreaHandler;
+
         
         #region EventHooks
 
@@ -62,8 +58,6 @@ namespace DistractorClouds.DistractorTask
         private MeshRenderer _targetRenderer;
         
         private int _itemCount = -1;
-
-        private float4 _searchAreaInViewSpace;
 
         private int _currentGroup;
 
@@ -141,8 +135,8 @@ namespace DistractorClouds.DistractorTask
         
         private void Start()
         {
+            _searchAreaHandler = GetComponent<SearchAreaHandler>();
             FindFirstObjectByType<InputHandler>().OnBumperDown += TrySelectDistractor;
-            _searchAreaInViewSpace = CalculateSearchArea(targetCamera, searchAreaInPixel);
         }
 
         private void GeneratePointCloudData()
@@ -179,34 +173,6 @@ namespace DistractorClouds.DistractorTask
             return new float4(bottomLeftViewSpace, topRightViewSpace);
         }
 
-        public static bool IsTargetInSearchArea(Camera targetCamera, Vector3 searchAreaMin, Vector3 searchAreaMax, Collider target, SearchAreaComparison comparison = SearchAreaComparison.CenterInsideBoundingBox, float overlapPercent = 0.5f)
-        {
-
-            Vector3 searchAreaMinToScreen = targetCamera.WorldToScreenPoint(searchAreaMin, targetCamera.stereoActiveEye);
-            Vector3 searchAreaMaxToScreen = targetCamera.WorldToScreenPoint(searchAreaMax, targetCamera.stereoActiveEye);
-
-            float2 screenSpaceMin = new float2(math.min(searchAreaMinToScreen.x, searchAreaMaxToScreen.x),
-                math.min(searchAreaMinToScreen.y, searchAreaMaxToScreen.y));
-            
-            float2 screenSpaceMax = new float2(math.max(searchAreaMinToScreen.x, searchAreaMaxToScreen.x),
-                math.max(searchAreaMinToScreen.y, searchAreaMaxToScreen.y));
-
-
-            return IsTargetInScreenSpaceSearchArea(targetCamera, screenSpaceMin, screenSpaceMax, target, comparison,
-                overlapPercent);
-
-        }
-
-        private static bool IsTargetInScreenSpaceSearchArea(Camera targetCamera, float2 screenSpaceMin,
-            float2 screenSpaceMax, Collider target, SearchAreaComparison comparison, float overlapPercent) =>
-            comparison switch
-            {
-                SearchAreaComparison.CenterInsideBoundingBox => CenterInsideBoundingBox(targetCamera, target,
-                    screenSpaceMin, screenSpaceMax),
-                SearchAreaComparison.BoundingBoxOverlap => TargetBoundingBoxOverlap(targetCamera, target, screenSpaceMin, screenSpaceMax, overlapPercent),
-                SearchAreaComparison.TargetBoundingBoxInsideBoundingBox => TargetBoundingBoxInsideBoundingBox(targetCamera, target, screenSpaceMin, screenSpaceMax),
-                _ => throw new ArgumentOutOfRangeException(nameof(comparison), comparison, null)
-            };
 
 
         public void StartDistractorCloudTask()
@@ -227,7 +193,7 @@ namespace DistractorClouds.DistractorTask
 #endif
                 return;
             }
-            if (IsTargetInView(_targetRenderer?.GetComponent<Collider>(), targetCamera, _searchAreaInViewSpace))
+            if (IsTargetInView(_targetRenderer?.GetComponent<Collider>(), targetCamera, _searchAreaHandler))
             {
                 OnSelectionPressed(true, _targetRenderer.transform.position);
                 //ChooseTargetDistractor();
@@ -240,45 +206,9 @@ namespace DistractorClouds.DistractorTask
             
         }
 
-        private static bool CenterInsideBoundingBox(Camera targetCamera, Collider target, float2 searchAreaMin, float2 searchAreaMax)
-        {
-            var position = ((float3)targetCamera.WorldToScreenPoint(target.bounds.center, targetCamera.stereoActiveEye)).xy;
-            return math.all(searchAreaMin <= position) && math.all(searchAreaMax >= position);
-        }
         
-        private static bool TargetBoundingBoxInsideBoundingBox(Camera targetCamera, Collider target, float2 searchAreaMin, float2 searchAreaMax)
-        {
-            var minPos = ((float3)targetCamera.WorldToScreenPoint(target.bounds.min, targetCamera.stereoActiveEye)).xy;
-            var maxPos = ((float3)targetCamera.WorldToScreenPoint(target.bounds.max, targetCamera.stereoActiveEye)).xy;
-            var minScreenPos = new float2(math.min(minPos.x, maxPos.x), math.min(minPos.y, maxPos.y));
-            var maxScreenPos = new float2(math.max(minPos.x, maxPos.x), math.max(minPos.y, maxPos.y));
-            return math.all(searchAreaMin <= minScreenPos) && math.all(searchAreaMax >= maxScreenPos);
-        }
-        
-        private static bool TargetBoundingBoxOverlap(Camera targetCamera, Collider target, float2 searchAreaMin, float2 searchAreaMax, float overlap)
-        {
-            var minPos = ((float3)targetCamera.WorldToScreenPoint(target.bounds.min, targetCamera.stereoActiveEye)).xy;
-            var maxPos = ((float3)targetCamera.WorldToScreenPoint(target.bounds.max, targetCamera.stereoActiveEye)).xy;
-            var minScreenPos = new float2(math.min(minPos.x, maxPos.x), math.min(minPos.y, maxPos.y));
-            var maxScreenPos = new float2(math.max(minPos.x, maxPos.x), math.max(minPos.y, maxPos.y));
 
-            var diff = maxScreenPos - minScreenPos;
-            var totalArea = diff.x * diff.y;
-            
-
-            if (math.any(minScreenPos > searchAreaMax) || math.any(maxScreenPos < searchAreaMin))
-            {
-                return false;
-            }
-            
-            var bottomLeft = math.max(minScreenPos, searchAreaMin);
-            var topRight = math.min(maxScreenPos, searchAreaMax);
-            diff = topRight - bottomLeft;
-            var area = diff.x * diff.y;
-            return area / totalArea >= overlap;
-        }
-
-        private static bool IsTargetInView(Collider target, Camera camera, float4 searchArea)
+        private static bool IsTargetInView(Collider target, Camera camera, SearchAreaHandler searchAreaHandler)
         {
             if (!target)
             {
@@ -288,10 +218,8 @@ namespace DistractorClouds.DistractorTask
             if (GeometryUtility.TestPlanesAABB(planes, target.bounds))
             {
                 //object is on screen, check if in center 
-
                 //return IsTargetInSearchArea(camera, searchArea.xy, searchArea.zw)
-                var position = ((float3)camera.WorldToViewportPoint(target.bounds.center, camera.stereoActiveEye)).xy;
-                return math.all(searchArea.xy <= position) && math.all(searchArea.zw >= position);
+                return searchAreaHandler.IsTargetInSearchArea(camera, target);
 
             }
 
@@ -371,12 +299,5 @@ namespace DistractorClouds.DistractorTask
         
         
     }
-
-    [Serializable]
-    public enum SearchAreaComparison
-    {
-        CenterInsideBoundingBox,
-        BoundingBoxOverlap,
-        TargetBoundingBoxInsideBoundingBox
-    }
+    
 }
