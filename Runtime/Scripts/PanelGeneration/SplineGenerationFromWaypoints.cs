@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using DistractorClouds.DistractorTask;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Splines;
@@ -21,21 +22,13 @@ namespace DistractorClouds.PanelGeneration
 
         private SplineContainer _splineContainer;
         
-        //public Action OnPathGenerationComplete 
-        
-
-        private const string XValue = "X";
-        private const string YValue = "Y";
-        private const string ZValue = "Z";
-
-
         public void BuildSpline()
         {
             if (!_splineContainer)
             {
                 _splineContainer = GetComponent<SplineContainer>();
             }
-            var waypoints = LoadWaypoints(textAsset);
+            var waypoints = WaypointLoader.LoadWaypoints(textAsset);
             RebuildSpline(ref _splineContainer, waypoints, tension, distanceFromPath);
             Debug.Log("Spline was generated", this);
         }
@@ -53,22 +46,7 @@ namespace DistractorClouds.PanelGeneration
             
         }*/
 
-        private List<float3> LoadWaypoints(TextAsset asset)
-        {
-            var fileData = asset.text;
-            var csvDictionary = CSVReader.Read(fileData);
 
-            var waypoints = new List<float3>();
-            foreach (var line in csvDictionary)
-            {
-                var x = float.Parse(line[XValue], CultureInfo.InvariantCulture);
-                var y = float.Parse(line[YValue], CultureInfo.InvariantCulture);
-                var z = float.Parse(line[ZValue], CultureInfo.InvariantCulture);
-                waypoints.Add(new float3(x, y, z));
-            }
-
-            return waypoints;
-        }
 
         private static void RebuildSpline(ref SplineContainer splineContainer, List<float3> waypoints,float tension = 0.5f, float distanceFromPath = 1f)
         {

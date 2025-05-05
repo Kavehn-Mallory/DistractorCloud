@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using DistractorClouds.DistractorTask.StudyEventData;
 using DistractorClouds.PanelGeneration;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
 using Random = UnityEngine.Random;
@@ -13,16 +12,22 @@ namespace DistractorClouds.DistractorTask
     [RequireComponent(typeof(SearchAreaHandler))]
     public class DistractorTaskManager : MonoBehaviour
     {
-        [Header("Distractor Task Settings")][Space(5f)]
-        public Camera targetCamera;
+        [SerializeField, Header("Distractor Task Settings"), Space(5f)]
+        private Camera targetCamera;
 
-        public ClosestSplinePointGeneration pointGenerator;
-        
-        public Material defaultMaterial;
-        public Material targetMaterial;
+        [SerializeField]
+        private ClosestSplinePointGeneration pointGenerator;
 
-        
-        private SearchAreaHandler _searchAreaHandler;
+        [SerializeField]
+        private Material defaultMaterial;
+        [SerializeField]
+        private Material targetMaterial;
+
+        [Header("Trial Configuration")] [SerializeField]
+        private int trialCount = 20;
+
+        [SerializeField]
+        private GameObject[] trialGroups = Array.Empty<GameObject>();
 
         
         #region EventHooks
@@ -56,21 +61,48 @@ namespace DistractorClouds.DistractorTask
         private const string NotVisible = "not visible";
 
         private MeshRenderer _targetRenderer;
-        
-        private int _itemCount = -1;
 
         private int _currentGroup;
 
         private int _groupCount;
 
+        private int _currentTrialCount;
+
+        /// <summary>
+        /// Is set to false as soon as we have reached the end of the spline with trials left 
+        /// </summary>
+        private bool _movingForwardOnSpline = true;
+
         private List<ClosestSplinePointGeneration.InstantiatedPointCloudObject> _instantiatedPointCloudObjects = new();
         private float _maxLength;
 
+        
+        private RecenterPathComponent _recenterPathComponent;
+        
+        
+        private SearchAreaHandler _searchAreaHandler;
 
         private static string CurrentTime => DateTime.Now.ToString("HH-mm-ss-ffff", CultureInfo.InvariantCulture);
 
         #endregion
+        
+        private void OnEnable()
+        {
+            InputHandler.Instance.OnRecenter += RepositionSpline;
+        }
 
+        private void RepositionSpline()
+        {
+            var splineRepositioningData = _recenterPathComponent.RecenterPath();
+            splineRepositioningData.TimeStamp = CurrentTime;
+            OnSplineRepositioning(splineRepositioningData);
+            
+        }
+
+        private void OnDisable()
+        {
+            InputHandler.Instance.OnRecenter -= RepositionSpline;
+        }
         
         private void OnStudyStart()
         {
@@ -120,17 +152,9 @@ namespace DistractorClouds.DistractorTask
             onStudyPathEndReachedEvent.Invoke(studyPathEndPointReachedData);
         }
 
-        private void OnSplineRepositioning(Vector3 oldPosition, Vector3 newPosition, Quaternion oldOrientation,
-            Quaternion newOrientation)
+
+        private void OnSplineRepositioning(SplineRepositioningData repositioningData)
         {
-            var repositioningData = new SplineRepositioningData
-            {
-                TimeStamp = CurrentTime,
-                OldOrientation = oldOrientation,
-                NewOrientation = newOrientation,
-                NewPosition = newPosition,
-                OldPosition = oldPosition
-            };
             OnSplineRepositioningEvent.Invoke(repositioningData);
             onSplineRepositioningEvent.Invoke(repositioningData);
         }
@@ -138,7 +162,9 @@ namespace DistractorClouds.DistractorTask
         private void Start()
         {
             _searchAreaHandler = GetComponent<SearchAreaHandler>();
+            _recenterPathComponent = GetComponent<RecenterPathComponent>();
             InputHandler.Instance.OnBumperDown += TrySelectDistractor;
+            
         }
 
         private void GeneratePointCloudData()
@@ -148,6 +174,8 @@ namespace DistractorClouds.DistractorTask
             _groupCount = pointGenerator.GroupCount;
             _maxLength = pointGenerator.MaxLength;
             _currentGroup = 0;
+            _currentTrialCount = 0;
+            _movingForwardOnSpline = true;
         }
 
         private static int ComparePointCloudObjectsByPosition(ClosestSplinePointGeneration.InstantiatedPointCloudObject x,
@@ -156,31 +184,14 @@ namespace DistractorClouds.DistractorTask
             return x.splinePosition.CompareTo(y.splinePosition);
         }
         
-        
 
-        private static float4 CalculateSearchArea(Camera targetCamera, float2 searchAreaInPixel)
+        public void StartDistractorCloudTask(int trialGroup)
         {
-            if (!targetCamera)
-            {
-                return new float4();
-            }
-            searchAreaInPixel /= 2f;
-            var center = targetCamera.pixelRect.center;
-            var bottomLeft = new Vector3(center.x - searchAreaInPixel.x, center.y - searchAreaInPixel.y, 0);
-            var topRight = new Vector3(center.x + searchAreaInPixel.x, center.y + searchAreaInPixel.y, 0);
-            var bottomLeftViewSpace = ((float3)targetCamera.ScreenToViewportPoint(bottomLeft)).xy;
-            var topRightViewSpace = ((float3)targetCamera.ScreenToViewportPoint(topRight)).xy;
-
-            
-            return new float4(bottomLeftViewSpace, topRightViewSpace);
-        }
-
-
-
-        public void StartDistractorCloudTask()
-        {
+            _currentGroup = 0;
+            _currentTrialCount = 0;
+            _movingForwardOnSpline = true;
             GeneratePointCloudData();
-            ChooseTargetDistractorInGroup(0);
+            ChooseTargetDistractorInGroup();
             OnStudyStart();
             Debug.Log($"First object was selected");
         }
@@ -191,7 +202,7 @@ namespace DistractorClouds.DistractorTask
             if (!_targetRenderer)
             {
 #if UNITY_EDITOR
-                StartDistractorCloudTask();
+                StartDistractorCloudTask(0);
 #endif
                 return;
             }
@@ -199,7 +210,7 @@ namespace DistractorClouds.DistractorTask
             {
                 OnSelectionPressed(true, _targetRenderer.transform.position, InputHandler.Instance.PointerPosition, InputHandler.Instance.PointerRotation);
                 //ChooseTargetDistractor();
-                ChooseTargetDistractorInGroup(0);
+                ChooseTargetDistractorInGroup();
                 Debug.Log($"Object is {Visible}");
                 return;
             }
@@ -207,8 +218,6 @@ namespace DistractorClouds.DistractorTask
             Debug.Log($"Object is {NotVisible}");
             
         }
-
-        
 
         private static bool IsTargetInView(Collider target, Camera camera, SearchAreaHandler searchAreaHandler)
         {
@@ -230,31 +239,30 @@ namespace DistractorClouds.DistractorTask
         
         
         
-        private void ChooseTargetDistractor()
-        {
-            _itemCount = _instantiatedPointCloudObjects.Count;
-           
-            SwapMaterial(_targetRenderer, defaultMaterial);
-            var index = Random.Range(0, _itemCount);
-            _targetRenderer = GetRenderer(index);
-            SwapMaterial(_targetRenderer, targetMaterial);
-            
-        }
 
-        private void ChooseTargetDistractorInGroup(int currentIndex)
+        private void ChooseTargetDistractorInGroup()
         {
-            if (_currentGroup == _groupCount)
+            if (ReachedEndOfSpline(_currentGroup, _groupCount - 1, _movingForwardOnSpline))
+            {
+                //turn around
+                _movingForwardOnSpline = !_movingForwardOnSpline;
+                OnSplineEndReached(_movingForwardOnSpline ? 0f : 1f);
+                _currentGroup -= 2;
+            }
+
+            if (_currentTrialCount == trialCount)
             {
                 OnStudyEnd();
                 return;
             }
+            
             var groupStartPosition = (_currentGroup / (float)_groupCount) * _maxLength;
             var groupEndPosition = (_currentGroup + 1) /  (float)_groupCount * _maxLength;
 
             var groupStartIndex = 0;
             var groupEndIndex = 0;
 
-            for (int i = currentIndex; i < _instantiatedPointCloudObjects.Count; i++)
+            for (int i = 0; i < _instantiatedPointCloudObjects.Count; i++)
             {
                 if (_instantiatedPointCloudObjects[i].splinePosition >= groupStartPosition)
                 {
@@ -272,11 +280,23 @@ namespace DistractorClouds.DistractorTask
                 }
             }
 
-            _currentGroup += 1;
+            
+            _currentTrialCount += 1;
+            _currentGroup = _movingForwardOnSpline ? _currentGroup + 1 : _currentGroup - 1;
             SwapMaterial(_targetRenderer, defaultMaterial);
             var index = Random.Range(groupStartIndex, groupEndIndex);
             _targetRenderer = GetRenderer(index);
             SwapMaterial(_targetRenderer, targetMaterial);
+        }
+
+        private bool ReachedEndOfSpline(int currentGroup, int groupCount, bool movingForwardOnSpline)
+        {
+            if (_movingForwardOnSpline)
+            {
+                return currentGroup == groupCount;
+            }
+
+            return currentGroup == 0;
         }
 
         private MeshRenderer GetRenderer(int index)

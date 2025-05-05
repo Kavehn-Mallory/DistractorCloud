@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using DistractorClouds.Attributes;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -55,10 +54,6 @@ namespace DistractorClouds.PanelGeneration
             CreateDistractors();
         }
         
-
-        
-        
-
         public void CreateDistractors()
         {
 
@@ -106,7 +101,7 @@ namespace DistractorClouds.PanelGeneration
             foreach (var spline in splineContainer)
             {
                 var splineLength = spline.CalculateLength();
-
+                
                 GroupCount = math.max(GroupCount, (int)math.floor(splineLength / (spacing.x + spacing.y)));
 
                 maxLength = math.max(splineLength, maxLength);
@@ -157,31 +152,6 @@ namespace DistractorClouds.PanelGeneration
                 }
             }
             
-
-
-            
-            /*
-            listOfPoints.AddRange(points);
-            for (int i = currentInstantiationIndex; i < maxObjectCount; i++)
-            {
-                var pointIndex = Random.Range(0, listOfPoints.Length);
-                var samplePoint = listOfPoints[pointIndex];
-                listOfPoints.RemoveAt(pointIndex);
-                var lerpValue = samplePoint.x / 100f;
-                var t = math.lerp(tOffset, 1, lerpValue);
-                if (IsPointPositionValid(t, splineLength, spacing))
-                {
-                    continue;
-                }
-                var position = _spline.EvaluatePosition(t);
-                position.y += samplePoint.y / 100f;
-
-                createdObjects.Add(SpawnPrefab(ref itemsToInstantiate, samplePoint.z, position, transform, _maxProbability));
-            }
-            */
-            
-
-
 
             points.Dispose();
             listOfPoints.Dispose();
@@ -289,18 +259,5 @@ namespace DistractorClouds.PanelGeneration
             _maxProbability = probability;
         }
         
-    }
-    
-    public readonly struct AsyncOperationGroup
-    {
-        public readonly List<AsyncOperation> Operations;
-
-        public float Progress => Operations.Count == 0 ? 0 : Operations.Average(o => o.progress);
-        public bool IsDone => Operations.All(o => o.isDone);
-
-        public AsyncOperationGroup(int initialCapacity)
-        {
-            Operations = new List<AsyncOperation>(initialCapacity);
-        }
     }
 }

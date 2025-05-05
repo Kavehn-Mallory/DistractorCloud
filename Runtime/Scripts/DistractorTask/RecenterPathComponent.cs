@@ -1,4 +1,5 @@
 ﻿using System;
+using DistractorClouds.DistractorTask.StudyEventData;
 using UnityEngine;
 
 namespace DistractorClouds.DistractorTask
@@ -9,20 +10,21 @@ namespace DistractorClouds.DistractorTask
         [SerializeField]
         private Transform rigCamera;
 
-        private void OnEnable()
-        {
-            InputHandler.Instance.OnRecenter += RecenterPath;
-        }
-
-        private void OnDisable()
-        {
-            InputHandler.Instance.OnRecenter -= RecenterPath;
-        }
 
 
-        public void RecenterPath()
+
+        public SplineRepositioningData RecenterPath()
         {
+            var splineRepositioningData = new SplineRepositioningData
+            {
+                OldPosition = rigCamera.position,
+                OldOrientation = rigCamera.rotation
+            };
             transform.SetPositionAndRotation(rigCamera.position, rigCamera.rotation);
+
+            splineRepositioningData.NewPosition = rigCamera.position;
+            splineRepositioningData.NewOrientation = rigCamera.rotation;
+            return splineRepositioningData;
         }
     }
 }
