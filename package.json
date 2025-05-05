@@ -1,6 +1,6 @@
 {
   "name": "com.kavehnmallory.distractorclouds",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "Distractor Clouds",
   "description": "This package contains the MagicLeap 2 Distractor Clouds Task",
   "unity": "6000.0",
@@ -19,13 +19,12 @@
   },
   "samples": [
     {
-    "displayName": "Distractor Cloud Scene Setup",
-    "description": "Contains sample scene with completed setup",
-    "path": "Samples~/SampleScene"
+      "displayName": "Distractor Cloud Scene Setup",
+      "description": "Contains sample scene with completed setup",
+      "path": "Samples~/SampleScene"
     }
   ],
-  "keywords": [
-  ],
+  "keywords": [],
   "author": {
     "name": "Jan Wittke",
     "email": "Jan.Wittke@h-brs.de",

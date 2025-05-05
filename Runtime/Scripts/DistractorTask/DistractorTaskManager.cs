@@ -82,13 +82,15 @@ namespace DistractorClouds.DistractorTask
             onStudyStartEvent.Invoke(studyStartData);
         }
 
-        private void OnSelectionPressed(bool validSelection, Vector3 targetPosition)
+        private void OnSelectionPressed(bool validSelection, Vector3 targetPosition, Vector3 controllerPosition, Quaternion controllerDirection)
         {
             var selectionPressedData = new SelectionData
             {
                 TimeStamp = CurrentTime,
                 IsValidSelection = validSelection,
-                TargetPosition = targetPosition
+                TargetPosition = targetPosition,
+                ControllerDirection = controllerDirection,
+                ControllerPosition = controllerPosition
             };
             
             OnSelectionPressedEvent.Invoke(selectionPressedData);
@@ -136,7 +138,7 @@ namespace DistractorClouds.DistractorTask
         private void Start()
         {
             _searchAreaHandler = GetComponent<SearchAreaHandler>();
-            FindFirstObjectByType<InputHandler>().OnBumperDown += TrySelectDistractor;
+            InputHandler.Instance.OnBumperDown += TrySelectDistractor;
         }
 
         private void GeneratePointCloudData()
@@ -195,13 +197,13 @@ namespace DistractorClouds.DistractorTask
             }
             if (IsTargetInView(_targetRenderer?.GetComponent<Collider>(), targetCamera, _searchAreaHandler))
             {
-                OnSelectionPressed(true, _targetRenderer.transform.position);
+                OnSelectionPressed(true, _targetRenderer.transform.position, InputHandler.Instance.PointerPosition, InputHandler.Instance.PointerRotation);
                 //ChooseTargetDistractor();
                 ChooseTargetDistractorInGroup(0);
                 Debug.Log($"Object is {Visible}");
                 return;
             }
-            OnSelectionPressed(false, _targetRenderer.transform.position);
+            OnSelectionPressed(false, _targetRenderer.transform.position, InputHandler.Instance.PointerPosition, InputHandler.Instance.PointerRotation);
             Debug.Log($"Object is {NotVisible}");
             
         }

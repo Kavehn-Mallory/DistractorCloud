@@ -39,18 +39,11 @@ namespace DistractorClouds.DistractorTask
 
         }
 
-
-        public void ConfigureSearchAreaCanvas(SearchAreaShape searchAreaShape, float2 dimensions, float canvasDistanceFromCamera)
+        
+        
+        public void ResizeSearchArea(SearchAreaShape searchAreaShape, Vector3 searchAreaPosition, Quaternion searchAreaRotation, float2 dimensions)
         {
             
-            if (!Camera.main)
-            {
-                Debug.LogError("Missing a main camera in the scene.", this);
-                return;
-            }
-
-            //searchAreaCanvas.planeDistance = canvasDistanceFromCamera;
-            searchAreaCanvas.transform.SetPositionAndRotation(Camera.main.transform.position + Camera.main.transform.forward * canvasDistanceFromCamera, Quaternion.identity);
             switch (searchAreaShape)
             {
                 case SearchAreaShape.Circle:
@@ -60,9 +53,8 @@ namespace DistractorClouds.DistractorTask
                     SetupRectangularSearchArea(dimensions);
                     break;
             }
+            searchAreaCanvas.transform.SetPositionAndRotation(searchAreaPosition, searchAreaRotation);
 
-            
-            
         }
 
         private void MoveCanvasBasedOnControllerPosition(Vector3 canvasPosition)

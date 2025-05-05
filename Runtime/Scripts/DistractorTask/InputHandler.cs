@@ -1,65 +1,94 @@
 ﻿using System;
+using DistractorClouds.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 namespace DistractorClouds.DistractorTask
 {
-    public class InputHandler : MonoBehaviour
+    public class InputHandler : PersistentSingleton<InputHandler>
     {
-        private MagicLeapInputs _mlInputs;
-        private MagicLeapInputs.ControllerActions _controllerActions;
+        private CustomMagicLeapOpenXRInput _customMagicLeapInputs;
+        private CustomMagicLeapOpenXRInput.ControllerActions _controllerActions;
+        private CustomMagicLeapOpenXRInput.EditorActions _editorActions;
         
         public Action OnBumperDown = delegate { };
 
-        public Quaternion PointerRotation => rotationInputAction.ReadValue<Quaternion>();
-        public Vector3 PointerPosition => positionInputAction.ReadValue<Vector3>();
-        
-        [SerializeField]
-        private InputAction positionInputAction = 
-            new InputAction(binding:"<MagicLeapController>/pointer/position", expectedControlType: "Vector3");
+        public Quaternion PointerRotation => ReadPointerRotation();
 
-        [SerializeField]
-        private InputAction rotationInputAction = new InputAction(binding: "<MagicLeapController>/pointer/rotation",
-            expectedControlType: "Quaternion");
 
+
+        public Vector3 PointerPosition => ReadPointerPosition();
+
+
+        public Ray PointerAsRay => ReadPointerPositionAsRay();
+
+        public Vector3 GetSearchAreaPosition(float distanceFromController)
+        {
 #if UNITY_EDITOR
-        private Mouse _activeMouse;
+            return PointerAsRay.GetPoint(distanceFromController);
 #endif
+            var forward = PointerRotation * Vector3.forward;
+            return PointerPosition + forward * distanceFromController;
+        }
+
+        public event Action OnRecenter = delegate { };
+
+        
         
  
         void Start()
         {
-            
-            positionInputAction.Enable();
+            _customMagicLeapInputs = new CustomMagicLeapOpenXRInput();
+            _customMagicLeapInputs.Enable();
 
-            rotationInputAction.Enable();
-            
-            
-            
-            _mlInputs = new MagicLeapInputs();
-            _mlInputs.Enable();
-            _controllerActions = new MagicLeapInputs.ControllerActions(_mlInputs);
+            //Initialize the ControllerActions using the Magic Leap Input
+            _controllerActions = new CustomMagicLeapOpenXRInput.ControllerActions(_customMagicLeapInputs);
+
+            //Subscribe to your choice of the controller events
             _controllerActions.Bumper.performed += HandleOnBumper;
+            _controllerActions.TriggerHold.performed += OnTriggerHold;
 
-            
-#if UNITY_EDITOR
-            _activeMouse = Mouse.current;
-#endif
+            _editorActions = new CustomMagicLeapOpenXRInput.EditorActions(_customMagicLeapInputs);
+
+
         }
-
-
-
-
-#if UNITY_EDITOR
-
-        private void Update()
+        
+        private Quaternion ReadPointerRotation()
         {
-            if (_activeMouse.rightButton.wasPressedThisFrame)
-            {
-                OnBumperDown.Invoke();
-            }
-        }
+#if UNITY_EDITOR
+            if (Application.isPlaying && Camera.main)
+                return Camera.main.transform.rotation;
 #endif
+
+            return _controllerActions.PointerRotation.ReadValue<Quaternion>();
+        }
+        
+        private Vector3 ReadPointerPosition()
+        {
+            return _controllerActions.PointerPosition.ReadValue<Vector3>();
+        }
+
+        private Ray ReadPointerPositionAsRay()
+        {
+#if UNITY_EDITOR
+            if (Application.isPlaying && Camera.main)
+            {
+                var position = _editorActions.MousePosition.ReadValue<Vector2>();
+                return Camera.main.ScreenPointToRay(new Vector3(position.x, position.y, Camera.main.nearClipPlane));
+            }
+
+            return new Ray();
+#endif
+        }
+
+        private void OnTriggerHold(InputAction.CallbackContext obj)
+        {
+            Debug.Log("Trigger was held down");
+            OnRecenter.Invoke();
+        }
+
+        
 
         private void HandleOnBumper(InputAction.CallbackContext obj)
         {
@@ -73,7 +102,7 @@ namespace DistractorClouds.DistractorTask
  
         void OnDestroy()
         {         
-            _mlInputs.Dispose();
+            _customMagicLeapInputs.Dispose();
         }
     }
 }

@@ -13,7 +13,7 @@ namespace DistractorClouds.DistractorTask
         [SerializeField] private float2 searchAreaAspectRatio = new float2(300, 200);
         [SerializeField] private float diagonalViewingAngle = 10f;
 
-        [SerializeField] private float canvasDistanceFromCamera = 1f;
+        [SerializeField] private float canvasDistanceFromController = 1f;
 
         [SerializeField, Range(0, 1)]
         private float overlapPercent = 0.5f;
@@ -22,6 +22,8 @@ namespace DistractorClouds.DistractorTask
         [SerializeField] private SearchAreaConfigurator searchAreaConfigurator;
 
         private float2 _dimensions;
+
+        private Transform _mainCameraTransform;
 
         private void Start()
         {
@@ -32,36 +34,63 @@ namespace DistractorClouds.DistractorTask
                 return;
             }
 
+            _mainCameraTransform = Camera.main.transform;
+
             if (!searchAreaConfigurator)
             {
                 Debug.LogWarning("Missing a SearchAreaConfigurator. Search area won't be displayed accurately", this);
             }
-            var diagonalSize = CalculateSizeFromViewingAngle(canvasDistanceFromCamera, diagonalViewingAngle);
-
+            var diagonalSize = CalculateSizeFromViewingAngle(canvasDistanceFromController, diagonalViewingAngle);
+            
+            var position = InputHandler.Instance.GetSearchAreaPosition(canvasDistanceFromController);
             switch (searchAreaShape)
             {
                 case SearchAreaShape.Circle:
                     _dimensions = new float2(diagonalSize, diagonalSize);
-                    searchAreaConfigurator?.ConfigureSearchAreaCanvas(SearchAreaShape.Circle, _dimensions, canvasDistanceFromCamera);
+                    
                     break;
                 case SearchAreaShape.Rectangle:
                     _dimensions = CalculateRectangularSearchAreaSize(diagonalSize, searchAreaAspectRatio);
-                    searchAreaConfigurator?.ConfigureSearchAreaCanvas(SearchAreaShape.Rectangle, _dimensions, canvasDistanceFromCamera);
                     break;
             }
+            searchAreaConfigurator?.ResizeSearchArea(searchAreaShape, position,   _mainCameraTransform.rotation, new float2(diagonalSize, diagonalSize));
+            _dimensions = CalculateScreenSpaceSize(Camera.main, _dimensions, canvasDistanceFromController);
+        }
 
-            _dimensions = CalculateScreenSpaceSize(Camera.main, _dimensions, canvasDistanceFromCamera);
+        private void Update()
+        {
+            RecalculateSearchAreaSize(searchAreaConfigurator, searchAreaShape, _mainCameraTransform.position, _mainCameraTransform.rotation, canvasDistanceFromController, diagonalViewingAngle, searchAreaAspectRatio);
+        }
 
+
+        private static void RecalculateSearchAreaSize(SearchAreaConfigurator configurator, SearchAreaShape searchAreaShape, Vector3 cameraPosition, Quaternion cameraRotation, float distanceFromController, float diagonalViewingAngle, float2 searchAreaAspectRatio)
+        {
+            var position = InputHandler.Instance.GetSearchAreaPosition(distanceFromController);
+            var distanceToCamera = Vector3.Distance(position, cameraPosition);
+
+            var diagonalSize = CalculateSizeFromViewingAngle(distanceToCamera, diagonalViewingAngle);
+
+            switch (searchAreaShape)
+            {
+                case SearchAreaShape.Circle:
+                    configurator?.ResizeSearchArea(SearchAreaShape.Circle, position, cameraRotation, new float2(diagonalSize, diagonalSize));
+                    break;
+                case SearchAreaShape.Rectangle:
+                    configurator?.ResizeSearchArea(SearchAreaShape.Rectangle, position, cameraRotation, CalculateRectangularSearchAreaSize(diagonalSize, searchAreaAspectRatio));
+                    break;
+            }
         }
 
         private static float2 CalculateScreenSpaceSize(Camera targetCamera, float2 dimensions, float distanceFromCamera)
         {
             var center = (float2)targetCamera.pixelRect.center;
             var worldPos = targetCamera.ScreenToWorldPoint(new Vector3(center.x, center.y, distanceFromCamera));
-            var offsetToScreen = ((float3)targetCamera.WorldToScreenPoint(worldPos + new Vector3(dimensions.x, dimensions.y, 0))).xy;
+
+            //adjust the offset based on camera direction
+            var upRight = targetCamera.transform.up * dimensions.y + targetCamera.transform.right * dimensions.x;
+            var offsetToScreen = ((float3)targetCamera.WorldToScreenPoint(worldPos + upRight)).xy;
 
             var dif = math.abs(offsetToScreen - center);
-
             return new float2(dif.x, dif.y);
         }
 
@@ -107,7 +136,9 @@ namespace DistractorClouds.DistractorTask
             {
                 return new float2();
             }
-            return targetCamera.pixelRect.center;
+
+            return ((float3)targetCamera.WorldToScreenPoint(
+                InputHandler.Instance.GetSearchAreaPosition(targetCamera.nearClipPlane))).xy;
         }
 
         private static bool IsTargetInCircularSearchArea(Camera targetCamera, Collider target, float2 searchAreaPosition, float2 dimensions, SearchAreaValidation searchAreaValidation, float overlapPercent) =>
