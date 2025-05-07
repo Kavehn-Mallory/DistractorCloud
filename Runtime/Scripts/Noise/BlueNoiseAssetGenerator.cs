@@ -27,7 +27,7 @@ namespace DistractorClouds.Noise
 
         [SerializeField] private int k = 30;
 
-        [SerializeField] private bool useGrowingK;
+        [SerializeField] private bool useGrowingK = true;
 
         [SerializeField] private int numberOfAssetsToGenerate = 5;
         
@@ -48,7 +48,7 @@ namespace DistractorClouds.Noise
         
 
         
-        [ContextMenu("Generate Blue Noise Asset")]
+        [ContextMenu("Generate Blue Noise Assets")]
         private void GenerateBlueNoise()
         {
             if (_jobHandles.Length != 0)
@@ -107,7 +107,7 @@ namespace DistractorClouds.Noise
                 CreateAsset(asset, pathToSamplePointAsset, samplePointAssetName + $"{i}");
                 
             }
-            Debug.Log("Asset created");
+            Debug.Log("Assets created");
         }
         
         

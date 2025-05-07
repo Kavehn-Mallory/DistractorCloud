@@ -22,6 +22,11 @@
       "displayName": "Distractor Cloud Scene Setup",
       "description": "Contains sample scene with completed setup",
       "path": "Samples~/SampleScene"
+    },
+    {
+      "displayName": "Blue Noise Generator Scene",
+      "description": "Contains the blue noise asset generator",
+      "path": "Samples~/BlueNoiseGeneratorScene"
     }
   ],
   "keywords": [],

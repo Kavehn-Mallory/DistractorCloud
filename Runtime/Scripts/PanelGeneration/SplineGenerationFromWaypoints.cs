@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 using DistractorClouds.DistractorTask;
 using Unity.Mathematics;
 using UnityEngine;
@@ -10,7 +8,7 @@ using UnityEngine.Splines;
 namespace DistractorClouds.PanelGeneration
 {
     [RequireComponent(typeof(SplineContainer))]
-    public class SplineGenerationFromWaypoints : MonoBehaviour
+    public partial class SplineGenerationFromWaypoints : MonoBehaviour
     {
 
         [Range(0, 1)]
@@ -33,20 +31,6 @@ namespace DistractorClouds.PanelGeneration
             Debug.Log("Spline was generated", this);
         }
         
-        /*private void Start()
-        {
-            if (!_splineContainer)
-            {
-                _splineContainer = GetComponent<SplineContainer>();
-            }
-
-            var waypoints = LoadWaypoints(textAsset);
-            RebuildSpline(ref _splineContainer, waypoints, tension, distanceFromPath);
-            
-            
-        }*/
-
-
 
         private static void RebuildSpline(ref SplineContainer splineContainer, List<float3> waypoints,float tension = 0.5f, float distanceFromPath = 1f)
         {

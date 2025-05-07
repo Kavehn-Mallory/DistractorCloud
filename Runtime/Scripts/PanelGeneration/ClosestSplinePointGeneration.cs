@@ -12,7 +12,7 @@ using Random = UnityEngine.Random;
 
 namespace DistractorClouds.PanelGeneration
 {
-    public class ClosestSplinePointGeneration : MonoBehaviour
+    public partial class ClosestSplinePointGeneration : MonoBehaviour
     {
         
         [HideInInspector]
