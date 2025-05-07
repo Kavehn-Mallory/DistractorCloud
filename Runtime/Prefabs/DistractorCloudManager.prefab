@@ -88,6 +88,7 @@ MonoBehaviour:
   targetMaterial: {fileID: 2100000, guid: 156ed64d10d2a514e89f2f50e094b9dd, type: 2}
   trialCount: 20
   trialGroups: []
+  debugMaterials: []
   onStudyStartEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -116,14 +117,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   samplePointAsset: {fileID: 11400000, guid: 027e39b06e1a6dc418a4671848db388d, type: 2}
+  blueNoiseSamplePoints:
+  - {fileID: 11400000, guid: 936c59b53be9fe24eb5319df50f94577, type: 2}
+  - {fileID: 11400000, guid: e2131749575b9c54583833fcc0af6932, type: 2}
+  - {fileID: 11400000, guid: a6441671c8f433b47884e6405406a22c, type: 2}
+  - {fileID: 11400000, guid: 8b724373c81a7994a8a4589b58632549, type: 2}
+  - {fileID: 11400000, guid: c23743f45310a734a85a4234101adaf7, type: 2}
   splineContainer:
   - {fileID: 8629863471669679292}
   - {fileID: 1982971435257730519}
   distractorLayer: 3
-  density: {x: 30, y: 40}
+  density: 20
+  minDistance: 0.1
+  height: 1
   spacing: {x: 6, y: 4}
   seed: 0
-  createDistractorsOnStart: 0
+  debugMaterials: []
   itemsToInstantiate:
   - prefab: {fileID: 0}
     Prefab: {fileID: 5831918106986619555, guid: f79ab4c7f8dfd864d847d9eabd9af292, type: 3}

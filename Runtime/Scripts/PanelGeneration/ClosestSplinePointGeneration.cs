@@ -37,9 +37,6 @@ namespace DistractorClouds.PanelGeneration
         public Vector2 spacing = new Vector2(6, 4);
         public int seed;
         
-        [SerializeField]
-        private Material[] debugMaterials;
-        
         public int GroupCount { get; private set; }
         public float MaxLength { get; private set; }
         
