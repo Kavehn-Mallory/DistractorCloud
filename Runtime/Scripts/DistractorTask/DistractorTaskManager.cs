@@ -29,6 +29,10 @@ namespace DistractorClouds.DistractorTask
         [SerializeField]
         private GameObject[] trialGroups = Array.Empty<GameObject>();
 
+
+        [SerializeField]
+        private Material[] debugMaterials;
+
         
         #region EventHooks
 
@@ -158,6 +162,13 @@ namespace DistractorClouds.DistractorTask
             OnSplineRepositioningEvent.Invoke(repositioningData);
             onSplineRepositioningEvent.Invoke(repositioningData);
         }
+
+        
+        [ContextMenu("Debug Groups")]
+        private void DebugGroups()
+        {
+            IterateGroupsAndMarkAllObjects();
+        }
         
         private void Start()
         {
@@ -206,7 +217,7 @@ namespace DistractorClouds.DistractorTask
 #endif
                 return;
             }
-            if (IsTargetInView(_targetRenderer?.GetComponent<Collider>(), targetCamera, _searchAreaHandler))
+            if (IsTargetInView(_targetRenderer.GetComponent<Collider>(), targetCamera, _searchAreaHandler))
             {
                 OnSelectionPressed(true, _targetRenderer.transform.position, InputHandler.Instance.PointerPosition, InputHandler.Instance.PointerRotation);
                 //ChooseTargetDistractor();
@@ -228,6 +239,7 @@ namespace DistractorClouds.DistractorTask
             var planes = GeometryUtility.CalculateFrustumPlanes(camera);
             if (GeometryUtility.TestPlanesAABB(planes, target.bounds))
             {
+                Debug.Log("Object on screen");
                 //object is on screen, check if in center 
                 //return IsTargetInSearchArea(camera, searchArea.xy, searchArea.zw)
                 return searchAreaHandler.IsTargetInSearchArea(camera, target);
@@ -256,15 +268,15 @@ namespace DistractorClouds.DistractorTask
                 return;
             }
             
-            var groupStartPosition = (_currentGroup / (float)_groupCount) * _maxLength;
-            var groupEndPosition = (_currentGroup + 1) /  (float)_groupCount * _maxLength;
+            var groupStartPosition = (_currentGroup / (float)_groupCount);
+            var groupEndPosition = (_currentGroup + 1) /  (float)_groupCount;
 
             var groupStartIndex = 0;
             var groupEndIndex = 0;
 
             for (int i = 0; i < _instantiatedPointCloudObjects.Count; i++)
             {
-                if (_instantiatedPointCloudObjects[i].splinePosition >= groupStartPosition)
+                if (_instantiatedPointCloudObjects[i].group == _currentGroup)
                 {
                     groupStartIndex = i;
                     break;
@@ -273,7 +285,7 @@ namespace DistractorClouds.DistractorTask
 
             for (int i = groupStartIndex; i < _instantiatedPointCloudObjects.Count; i++)
             {
-                if (_instantiatedPointCloudObjects[i].splinePosition > groupEndPosition)
+                if (_instantiatedPointCloudObjects[i].group > _currentGroup)
                 {
                     groupEndIndex = i;
                     break;
@@ -289,9 +301,29 @@ namespace DistractorClouds.DistractorTask
             SwapMaterial(_targetRenderer, targetMaterial);
         }
 
-        private bool ReachedEndOfSpline(int currentGroup, int groupCount, bool movingForwardOnSpline)
+        
+        
+        public void IterateGroupsAndMarkAllObjects()
         {
-            if (_movingForwardOnSpline)
+
+            Debug.Log("Running this");
+            for (int i = 0; i < _instantiatedPointCloudObjects.Count; i++)
+            {
+                if (_instantiatedPointCloudObjects[i].group >= _groupCount)
+                {
+                    continue;
+                }
+                _instantiatedPointCloudObjects[i].instantiatedGameObject.GetComponent<MeshRenderer>().material =
+                    debugMaterials[_instantiatedPointCloudObjects[i].group % debugMaterials.Length];
+                
+            }
+            
+            
+        }
+
+        private static bool ReachedEndOfSpline(int currentGroup, int groupCount, bool movingForwardOnSpline)
+        {
+            if (movingForwardOnSpline)
             {
                 return currentGroup == groupCount;
             }

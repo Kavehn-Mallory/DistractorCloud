@@ -30,6 +30,9 @@ namespace DistractorClouds.PanelGeneration
 
         public bool createDistractorsOnStart;
         
+        [SerializeField]
+        private Material[] debugMaterials;
+        
         public int GroupCount { get; private set; }
         public float MaxLength { get; private set; }
         
@@ -46,6 +49,7 @@ namespace DistractorClouds.PanelGeneration
         public struct InstantiatedPointCloudObject
         {
             public float splinePosition;
+            public int group;
             public GameObject instantiatedGameObject;
         }
 
@@ -86,9 +90,12 @@ namespace DistractorClouds.PanelGeneration
             var createdObjects = new List<InstantiatedPointCloudObject>(maxObjectEstimate);
             
 
-            var scaledAsset =
+            /*var scaledAsset =
                 samplePointAsset.ScaleSamplePoints((100f * samplePointAsset.scale) /
-                                                   samplePointAsset.boundingBoxSize.x);
+                                                   samplePointAsset.boundingBoxSize.x);*/
+            
+            var scaledAsset =
+                samplePointAsset.AlternativeScaleSamplePoints(new int2(100, 100));
             var samplePointDensity =
                 scaledAsset.samplePoints.Length; //we already scaled the asset to one square meter (but in cm)
             var samplePointAssetPerMeter = actualDensity / samplePointDensity;
@@ -96,17 +103,27 @@ namespace DistractorClouds.PanelGeneration
             var points = new NativeArray<float3>(scaledAsset.samplePoints, Allocator.TempJob);
             var listOfPoints = new NativeList<float3>(scaledAsset.samplePoints.Length, Allocator.TempJob);
 
-            var maxLength = 0f;
+
+            var lowY = scaledAsset.samplePoints.Select(sample => sample.y).Min();
+            var highY = scaledAsset.samplePoints.Select(sample => sample.y).Max();
+            var yOffset = (highY - lowY) / 100f;
             
+            var maxLength = 0f;
+
             foreach (var spline in splineContainer)
             {
                 var splineLength = spline.CalculateLength();
-                
                 GroupCount = math.max(GroupCount, (int)math.floor(splineLength / (spacing.x + spacing.y)));
+            }
+            
+            foreach (var spline in splineContainer)
+            {
+                
+                var splineLength = spline.CalculateLength();
+                
 
                 maxLength = math.max(splineLength, maxLength);
-                
-                
+
                 
                 
                 var repeatsOfSamplePointAsset = splineLength * samplePointAssetPerMeter;
@@ -116,7 +133,8 @@ namespace DistractorClouds.PanelGeneration
 
                 var percentageOfSplinePerAsset = 1f / repeatsOfSamplePointAsset;
 
-
+                var objectsPerSpline = 0;
+                
                 var tOffset = 0f;
 
                 for (int i = 0; i < fullRepeats + 1; i++)
@@ -125,31 +143,39 @@ namespace DistractorClouds.PanelGeneration
 
                     while (listOfPoints.Length > 0)
                     {
+                        objectsPerSpline++;
                         var pointIndex = Random.Range(0, listOfPoints.Length);
                         var samplePoint = listOfPoints[pointIndex];
                         listOfPoints.RemoveAt(pointIndex);
                         var lerpValue = samplePoint.x / 100f;
                         var t = math.lerp(tOffset, tOffset + percentageOfSplinePerAsset, lerpValue);
 
-                        if (!IsPointPositionValid(t, splineLength, spacing))
+                        var currentGroup = (int)(t * (splineLength / (spacing.x + spacing.y)));
+                        
+                        if (!IsPointPositionValid(t, splineLength, spacing, currentGroup, GroupCount))
                         {
                             continue;
                         }
 
+                        
 
                         var position = spline.EvaluatePosition(t);
                         position.y += samplePoint.y / 100f;
 
                         createdObjects.Add(new InstantiatedPointCloudObject
                         {
-                            splinePosition = t * splineLength,
+                            splinePosition = t,
                             instantiatedGameObject = SpawnPrefab(ref itemsToInstantiate, samplePoint.z, position,
-                                transform, _maxProbability, distractorLayer)
+                                transform, _maxProbability, distractorLayer),
+                            group = currentGroup
                         });
                     }
 
                     tOffset += percentageOfSplinePerAsset;
                 }
+                
+                
+                Debug.Log($"Spline density: {objectsPerSpline / (splineLength * yOffset)}");
             }
             
 
@@ -162,11 +188,12 @@ namespace DistractorClouds.PanelGeneration
             Debug.Log($"Generated {_instantiatedObjects.Length} objects");
         }
 
-        private static bool IsPointPositionValid(float t, float splineLength, Vector2 spacing)
+        private static bool IsPointPositionValid(float t, float splineLength, Vector2 spacing, int currentGroup,
+            int maxGroupCount)
         {
             var moduloValue = (t * splineLength) % (spacing.x + spacing.y);
 
-            return moduloValue <= spacing.x && t is >= 0 and <= 1.0f;
+            return currentGroup < maxGroupCount && moduloValue <= spacing.x && t is >= 0 and <= 1.0f;
         }
 
 

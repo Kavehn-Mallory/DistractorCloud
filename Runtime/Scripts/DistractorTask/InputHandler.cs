@@ -37,7 +37,7 @@ namespace DistractorClouds.DistractorTask
         
         
  
-        void Start()
+        void Awake()
         {
             _customMagicLeapInputs = new CustomMagicLeapOpenXRInput();
             _customMagicLeapInputs.Enable();

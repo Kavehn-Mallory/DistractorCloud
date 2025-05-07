@@ -34,6 +34,30 @@ namespace DistractorClouds.PanelGeneration
             return scaledPointAsset;
         }
         
+        public SamplePointAsset AlternativeScaleSamplePoints(int2 newScale)
+        {
+            if (math.all(newScale == int2.zero))
+            {
+                newScale = 1;
+            }
+            var k = newScale / (float2)boundingBoxSize;
+            var scaledPointAsset = Instantiate(this);
+            
+            scaledPointAsset.boundingBoxSize = newScale;
+            
+            for (var i = 0; i < scaledPointAsset.samplePoints.Length; i++)
+            {
+                var samplePointPosition = scaledPointAsset.samplePoints[i];
+                samplePointPosition = new float3(samplePointPosition.x * k.x, samplePointPosition.y * k.y, samplePointPosition.z);
+                scaledPointAsset.samplePoints[i] = samplePointPosition;
+            }
+
+            
+            
+            
+            return scaledPointAsset;
+        }
+        
     }
     
 }
