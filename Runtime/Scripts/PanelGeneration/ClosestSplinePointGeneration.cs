@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DistractorClouds.Attributes;
+using DistractorClouds.Noise;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEditor;
@@ -13,7 +14,11 @@ namespace DistractorClouds.PanelGeneration
 {
     public class ClosestSplinePointGeneration : MonoBehaviour
     {
+        
+        [HideInInspector]
         public SamplePointAsset samplePointAsset;
+
+        public BlueNoiseSamplePointAsset[] blueNoiseSamplePoints;
 
         [SerializeField]
         private SplineContainer[] splineContainer = Array.Empty<SplineContainer>();
@@ -22,13 +27,15 @@ namespace DistractorClouds.PanelGeneration
         public int distractorLayer = 3;
         
         [Tooltip("Determines the number of objects per square meter for the given object")]
-        public Vector2 density = new Vector2(2, 2);
+        public float density = 20f;
+
+        public float minDistance = 0.1f;
+
+        public float height = 1f;
 
         [Tooltip("Spacing of object sections. X value is filled with objects, y value is empty between sections")]
         public Vector2 spacing = new Vector2(6, 4);
         public int seed;
-
-        public bool createDistractorsOnStart;
         
         [SerializeField]
         private Material[] debugMaterials;
@@ -41,6 +48,7 @@ namespace DistractorClouds.PanelGeneration
         private InstantiatedPointCloudObject[] _instantiatedObjects;
 
         private float _maxProbability;
+        
         
 
         public InstantiatedPointCloudObject[] InstantiatedGameObjects => _instantiatedObjects;
@@ -55,9 +63,159 @@ namespace DistractorClouds.PanelGeneration
 
         private void Start()
         {
-            CreateDistractors();
+            //CreateDistractors();
+            var assetSpawnPoints = CreateAssetSpawnPoints(ref splineContainer, ref blueNoiseSamplePoints, spacing, height, minDistance, density, seed);
+            var ownTransform = this.transform;
+            Debug.Log(assetSpawnPoints.Length);
+            SpawnDistractors(ref assetSpawnPoints, ref itemsToInstantiate, ref ownTransform, distractorLayer);
         }
+
+        public static AssetSpawnPoint[] CreateAssetSpawnPoints(ref SplineContainer[] splineContainer,
+            ref BlueNoiseSamplePointAsset[] samplePointAssets, float2 spacing, float height, float minRadius,
+            float actualDensity, int seed)
+        {
+            var splineGenerationFromWaypoint = splineContainer
+                .Where(spline => spline.GetComponent<SplineGenerationFromWaypoints>())
+                .Select(s => s.GetComponent<SplineGenerationFromWaypoints>()).ToList();
+
+            foreach (var spline in splineGenerationFromWaypoint)
+            {
+                spline.BuildSpline();
+            }
+            
+            Random.InitState(seed);
+            
+            //todo put that somewhere else
+            //EnsureItemsValidity();
+            
+            if ( splineContainer.Length == 0)
+            {
+                Debug.LogWarning("No objects or splines specified");
+                return Array.Empty<AssetSpawnPoint>();
+            }
+            
+            
+            var maxObjectEstimate = (int)math.round(actualDensity * splineContainer.Length * splineContainer[0].CalculateLength());
+            var createdObjects = new List<AssetSpawnPoint>(maxObjectEstimate);
+            
+
+            
+            var groupCount = 0;
+
+            foreach (var spline in splineContainer)
+            {
+                var splineLength = spline.CalculateLength();
+                groupCount = math.max(groupCount, (int)math.floor(splineLength / (spacing.x + spacing.y)));
+            }
+            
+            
+            foreach (var spline in splineContainer)
+            {
+
+                var samplePointAsset = samplePointAssets[Random.Range(0, samplePointAssets.Length)];
+                
+                if (samplePointAsset.dimensions.y < height)
+                {
+                    throw new NotImplementedException();
+                }
+
+                var heightDif = samplePointAsset.dimensions.y - height;
+            
+                var startPoint = new float2(0, Random.Range(0, heightDif));
+
+                var scaledAsset = samplePointAsset.ScaleAsset(minRadius);
+
+                scaledAsset = scaledAsset.FilterAsset(new float4(startPoint, scaledAsset.dimensions.x, startPoint.y + height));
+
+
+           
+            
+            
+                var samplePointDensity = scaledAsset.samplePoints.Length /
+                                         (scaledAsset.dimensions.x * scaledAsset.dimensions.y);
+                
+                //width that the sample point asset should cover -> we can't make it smaller than the actual width or we are violating the radius requirement (in that case the density is not feasible anyways 
+                var samplePointAssetWidth = math.max((samplePointDensity / actualDensity) * scaledAsset.dimensions.x, scaledAsset.dimensions.x);
+                Debug.Log(samplePointAssetWidth);
+
+                var splineLength = spline.CalculateLength();
+                
+                var repeatsOfSamplePointAsset = splineLength / samplePointAssetWidth;
+                
+                Debug.Log(repeatsOfSamplePointAsset);
+                Debug.Log($"Remaining points: {scaledAsset.samplePoints.Length}");
+                int repeats = (int)math.ceil(repeatsOfSamplePointAsset);
+                
+                var pointsGenerated = 0;
+
+                var percentageOfSplinePerAsset = 1f / repeatsOfSamplePointAsset;
+                
+                for (int currentRepeat = 0; currentRepeat < repeats; currentRepeat++)
+                {
+                    var currentTStart = percentageOfSplinePerAsset * currentRepeat;
+
+                    foreach (var samplePoint in scaledAsset.samplePoints)
+                    {
+                        var lerpValue = samplePoint.x / scaledAsset.dimensions.x;
+                        var t = math.lerp(currentTStart, currentTStart + percentageOfSplinePerAsset, lerpValue);
+
+                        var currentGroup = (int)(t * (splineLength / (spacing.x + spacing.y)));
+                        
+                        if (!IsPointPositionValid(t, splineLength, spacing, currentGroup, groupCount))
+                        {
+                            continue;
+                        }
+
+                        pointsGenerated++;
+
+                        var position = spline.EvaluatePosition(t);
+                        position.y += samplePoint.y;
+                        
+                        createdObjects.Add(new AssetSpawnPoint()
+                        {
+                            T = t,
+                            Position = position,
+                            ProbabilityValue = samplePoint.z,
+                            Group = currentGroup
+                        });
+
+                        
+                    }
+                    
+                }
+
+                var groupsForSpline = splineLength / (spacing.x + spacing.y);
+                Debug.Log($"Density for spline {pointsGenerated / (groupsForSpline * spacing.x * height)}");
+            }
+            
+
+            return createdObjects.ToArray();
+        }
+
+        public static InstantiatedPointCloudObject[] SpawnDistractors(ref AssetSpawnPoint[] spawnPoints,
+            ref SplineInstantiate.InstantiableItem[] itemsToInstantiate, ref Transform parentTransform, int distractorLayer)
+        {
+
+            var maxProbability = EnsureItemsValidity(ref itemsToInstantiate, parentTransform);
+            var result = new InstantiatedPointCloudObject[spawnPoints.Length];
+            for (var i = 0; i < spawnPoints.Length; i++)
+            {
+                var spawnPoint = spawnPoints[i];
+                result[i] = (new InstantiatedPointCloudObject
+                {
+                    splinePosition = spawnPoint.T,
+                    instantiatedGameObject = SpawnPrefab(ref itemsToInstantiate, spawnPoint.ProbabilityValue, spawnPoint.Position,
+                        parentTransform, maxProbability, distractorLayer),
+                    group = spawnPoint.Group
+                });
+            }
+
+            return result;
+        }
+
         
+        
+        [Obsolete]
         public void CreateDistractors()
         {
 
@@ -72,7 +230,7 @@ namespace DistractorClouds.PanelGeneration
             
             Debug.Log("Beginning with generation of objects");
             Random.InitState(seed);
-            var actualDensity = Random.Range(density.x, density.y);
+            var actualDensity = density;
             
 
 
@@ -263,6 +421,7 @@ namespace DistractorClouds.PanelGeneration
         }
 
 
+        [Obsolete]
         void EnsureItemsValidity()
         {
             float probability = 0;
@@ -284,6 +443,29 @@ namespace DistractorClouds.PanelGeneration
                 }
             }
             _maxProbability = probability;
+        }
+        
+        private static float EnsureItemsValidity(ref SplineInstantiate.InstantiableItem[] itemsToInstantiate, Transform parentTransform)
+        {
+            float probability = 0;
+            for (int i = 0; i < itemsToInstantiate.Length; i++)
+            {
+                var item = itemsToInstantiate[i];
+
+                if (item.Prefab != null)
+                {
+                    if (parentTransform.IsChildOf(item.Prefab.transform))
+                    {
+                        Debug.LogWarning("Instantiating a parent of the SplineInstantiate object itself is not permitted" +
+                                         $" ({item.Prefab.name} is a parent of {parentTransform.gameObject.name}).", parentTransform);
+                        item.Prefab = null;
+                        itemsToInstantiate[i] = item;
+                    }
+                    else
+                        probability += item.Probability;
+                }
+            }
+            return probability;
         }
         
     }

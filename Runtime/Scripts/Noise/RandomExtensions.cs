@@ -1,4 +1,5 @@
 ﻿using Unity.Mathematics;
+using Random = Unity.Mathematics.Random;
 
 namespace DistractorClouds.Noise
 {
@@ -11,13 +12,13 @@ namespace DistractorClouds.Noise
             return math.normalize(new float2(math.sin(randomAngle), math.cos(randomAngle)));
         }
         
-        public static float2 NextRandomPointInsideUnitCircle(this ref Unity.Mathematics.Random random)
+        public static float2 NextRandomPointInsideUnitCircle(this ref Random random)
         {
             return math.sqrt(random.NextFloat()) * random.NextSinCos();
         }
 
 
-        public static float2 NextSinCos(this ref Unity.Mathematics.Random random)
+        public static float2 NextSinCos(this ref Random random)
         {
             math.sincos(random.NextFloat(0, math.TAU), out float sin, out float cos);
             return new float2(sin, cos);
@@ -39,11 +40,7 @@ namespace DistractorClouds.Noise
 
         }
 
-        public static void RestrictToGridDimensions(this ref float2 value, float width, float height)
-        {
-            value = math.max(0, math.min(value, new float2(width, height)));
-        }
-        
+
         
     }
 }
