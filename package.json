@@ -1,6 +1,6 @@
 {
   "name": "com.kavehnmallory.distractorclouds",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "displayName": "Distractor Clouds",
   "description": "This package contains the MagicLeap 2 Distractor Clouds Task",
   "unity": "6000.0",
@@ -27,6 +27,11 @@
       "displayName": "Blue Noise Generator Scene",
       "description": "Contains the blue noise asset generator",
       "path": "Samples~/BlueNoiseGeneratorScene"
+    },
+    {
+      "displayName": "Object Pooling Sample",
+      "description": "Contains the object pooling examples",
+      "path": "Samples~/Object Pooling Example"
     }
   ],
   "keywords": [],

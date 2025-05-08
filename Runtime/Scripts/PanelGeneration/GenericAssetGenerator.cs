@@ -13,8 +13,8 @@ namespace DistractorClouds.PanelGeneration
 
         public int DistractorLayer = 3;
 
-        public abstract Transform ParentTransform { get; }
-        public abstract T Prefab { get; }
+        public Transform ParentTransform { get; set; }
+        public T Prefab { get; set; }
 
         public ObjectPool<T> ObjectPool
         {
@@ -43,6 +43,7 @@ namespace DistractorClouds.PanelGeneration
                 if (IsInGroup(spawnPoint.Group, startGroup, endGroup))
                 {
                     var spawnedObject = ObjectPool.Get();
+                    SetProbability(spawnedObject, spawnPoint.ProbabilityValue);
                     spawnedObject.transform.SetPositionAndRotation(spawnPoint.Position, Quaternion.identity);
                     ActiveObjects.Add(new GroupObject<T>
                     {
@@ -75,16 +76,25 @@ namespace DistractorClouds.PanelGeneration
         }
 
 
-        public abstract void OnDestroyObject(T obj);
+        public virtual void OnDestroyObject(T obj)
+        {
+            Object.Destroy(obj.gameObject);
+        }
 
         public abstract void OnReleaseObject(T obj);
 
         public abstract void OnGetObject(T obj);
 
+        public abstract void SetProbability(T obj, float probability);
+
         public virtual T CreateObject()
         {
             var instance = Object.Instantiate(Prefab, ParentTransform, true);
             instance.gameObject.layer = DistractorLayer;
+            foreach (Transform child in instance.transform)
+            {
+                child.gameObject.layer = DistractorLayer;
+            }
             return instance;
         }
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
+using DistractorClouds.Attributes;
 using DistractorClouds.DistractorTask.StudyEventData;
 using DistractorClouds.PanelGeneration;
 using Unity.Mathematics;
@@ -12,9 +12,11 @@ using Random = UnityEngine.Random;
 
 namespace DistractorClouds.DistractorTask
 {
-    public abstract partial class BaseUserStudyHandler<T, TS> : MonoBehaviour where T : GenericAssetGenerator<TS> where TS : MonoBehaviour
+    [RequireComponent(typeof(RecenterPathComponent), typeof(SearchAreaHandler))]
+    public abstract partial class BaseUserStudyHandler<T, TS> : MonoBehaviour where T : GenericAssetGenerator<TS>, new() where TS : MonoBehaviour
     {
         public T assetGenerator;
+
 
         
         [SerializeField, Header("Distractor Task Settings"), Space(5f)]
@@ -22,6 +24,9 @@ namespace DistractorClouds.DistractorTask
         
         [Header("Trial Configuration")] [SerializeField]
         private int trialCount = 20;
+        [Layer]
+        public int distractorLayer = 3;
+        public TS prefab;
         
         [SerializeField]
         private DistractorUserStudySetup setupComponent;
@@ -84,7 +89,13 @@ namespace DistractorClouds.DistractorTask
                 Debug.LogError($"Missing {nameof(DistractorUserStudySetup)} component", this);
                 this.enabled = false;
             }
-            
+
+            assetGenerator = new T
+            {
+                Prefab = prefab,
+                ParentTransform = this.transform,
+                DistractorLayer = distractorLayer
+            };
             _searchAreaHandler = GetComponent<SearchAreaHandler>();
             _recenterPathComponent = GetComponent<RecenterPathComponent>();
             
@@ -183,7 +194,8 @@ namespace DistractorClouds.DistractorTask
             _currentTarget = -1;
             _assetSpawnPoints = setupComponent.InitializeTrial(pathComplexity, taskLoad);
             
-            assetGenerator.SpawnObjectsForPath(_assetSpawnPoints);
+            if(spawnAllGroupsAtBeginning)
+                assetGenerator.SpawnObjectsForPath(_assetSpawnPoints);
             _groupTrialEnumerator =
                 new DistractorGroupTrialEnumerator(trialCount, _assetSpawnPoints[^1].Group + 1, maxGroupCountToSpawn);
             Debug.Log($"Number of groups: {_assetSpawnPoints[^1].Group + 1}");

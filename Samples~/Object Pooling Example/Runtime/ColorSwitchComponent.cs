@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace DistractorClouds.DistractorTask.Distractors
+namespace Samples.Distractor_Clouds.Object_Pooling_Sample.Runtime
 {
     [RequireComponent(typeof(MeshRenderer))]
     public class ColorSwitchComponent : MonoBehaviour
