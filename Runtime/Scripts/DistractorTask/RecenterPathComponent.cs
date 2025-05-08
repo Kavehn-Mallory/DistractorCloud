@@ -1,5 +1,4 @@
-﻿using System;
-using DistractorClouds.DistractorTask.StudyEventData;
+﻿using DistractorClouds.DistractorTask.StudyEventData;
 using UnityEngine;
 
 namespace DistractorClouds.DistractorTask
@@ -15,6 +14,7 @@ namespace DistractorClouds.DistractorTask
 
         public SplineRepositioningData RecenterPath()
         {
+            Debug.Log("Recentering", this);
             var splineRepositioningData = new SplineRepositioningData
             {
                 OldPosition = rigCamera.position,

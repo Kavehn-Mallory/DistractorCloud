@@ -101,8 +101,8 @@ namespace DistractorClouds.DistractorTask
         }
  
         void OnDestroy()
-        {         
-            _customMagicLeapInputs.Dispose();
+        {
+            _customMagicLeapInputs?.Dispose();
         }
     }
 }

@@ -72,13 +72,6 @@ namespace DistractorClouds.DistractorTask
 
             return difficultPaths;
             
-            GeneratePoints(ref difficultPaths, taskLoad == TaskLoad.Low ? lowDensity : highDensity);
-        }
-
-        private void GeneratePoints(ref SplineContainer[] containers, float density)
-        {
-            ClosestSplinePointGeneration.CreateAssetSpawnPoints(ref containers, ref blueNoiseSamplePointAssets, spacing, height,
-                minDistance, density, seed);
         }
 
         private SplineContainer[] StartSimplePath(TaskLoad taskLoad)
